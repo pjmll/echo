@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python.exe --version)",
+      "Bash(.venv/Scripts/python.exe -m pytest --version)",
+      "Bash(.venv/Scripts/python.exe -c \"import anthropic, fastapi, pydantic; print\\('core deps OK'\\)\")",
+      "Bash(.venv/bin/python --version)",
+      "Bash(.venv/bin/python -m pytest --version)",
+      "Bash(python -m pytest --version)",
+      "Bash(python -c \"import ast; [ast.parse\\(open\\(f, encoding='utf-8'\\).read\\(\\)\\) for f in ['lab_test.py', 'rag_tools.py'] if __import__\\('os'\\).path.exists\\(f\\) or True]\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('lab_test.py', encoding='utf-8'\\).read\\(\\)\\); print\\('lab_test.py syntax OK'\\)\")",
+      "Bash(ls mcp/)",
+      "Bash(ls agents/)",
+      "Bash(ls memory/)",
+      "Bash([ -f \"$dir/lab_test.py\" ])",
+      "Bash(python -c 'import ast; ast.parse\\(open\\('\\\\''__TRACKED_VAR__/lab_test.py'\\\\'', encoding='\\\\''utf-8'\\\\''\\).read\\(\\)\\)')",
+      "Bash(ls -la *.json *.py)",
+      "Bash(grep -n \"\\\\.promentor\" \"/d/EchoMind所有代码+详细文档+简历/EchoMind/.gitignore\")"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "chapter_id": "ch05-memory-context",
+  "title": "记忆与上下文构建",
+  "description": "提取记忆管理的确定性内核：工作记忆 key 生成、上下文压缩分区、摘要合并（规则版本）、上下文格式化。",
+  "language": "python",
+  "package": "memory_tools",
+  "files": [
+    {
+      "path": "memory_tools.py",
+      "description": "记忆管理确定性内核。只允许标准库（hashlib/json）"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "def wm_key(user_id: str, conv_id: str) -> str",
+        "doc": "生成工作记忆的 Redis key。格式：f'wm:{user_id}:{conv_id}'。纯函数，无副作用。"
+      },
+      {
+        "signature": "def compress_partition(messages: List[dict], keep_recent: int = 5) -> Tuple[List[dict], List[dict]]",
+        "doc": "将消息列表分为两部分：待压缩部分和保留部分。如果 len(messages) <= keep_recent，返回 ([], messages)。否则返回 (messages[:-keep_recent], messages[-keep_recent:])。messages 中每个元素是 dict，包含 'role' 和 'content' 字段。不修改原列表，返回新列表。"
+      },
+      {
+        "signature": "def merge_summary(old_summary: str, new_summary: str) -> str",
+        "doc": "合并两段摘要（规则版本，不调用 LLM）。如果 old_summary 为空或只有空白，返回 new_summary.strip()。如果 new_summary 为空或只有空白，返回 old_summary.strip()。否则返回 f'{old_summary.strip()}\\n\\n{new_summary.strip()}'（用双换行连接）。结果去除首尾空白。"
+      },
+      {
+        "signature": "def format_context(history: List[dict], summary: str = '', knowledge: str = '') -> str",
+        "doc": "格式化传给 LLM 的上下文。按顺序拼接三部分：1) 如果 summary 非空，添加 '[对话摘要]\\n{summary}'；2) 如果 knowledge 非空，添加 '[相关知识]\\n{knowledge}'；3) 如果 history 非空，取最近 10 条（history[-10:]），格式化为 '[最近对话]\\n{role}: {content}\\n{role}: {content}...'。各部分用双换行 '\\n\\n' 连接。如果所有部分都为空，返回空字符串。history 中每个元素是 dict，包含 'role' 和 'content' 字段。"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "本章与 Ch1-Ch4 解耦：不需要 import 其他章节。挑战题（不计入测试）：实现完整的 _compress 流程——给定消息列表，分区、生成摘要文本、合并摘要、返回更新后的工作记忆。"
+}

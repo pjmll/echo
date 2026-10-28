@@ -1,0 +1,62 @@
+{
+  "course_id": "echomind-internals",
+  "current_chapter": "ch01-intent",
+  "chapters": {
+    "ch00-overview": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "ch01-intent": {
+      "status": "in_progress",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "ch02-routing": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "ch03-mcp-tools": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "ch04-rag": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "ch05-memory-context": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "ch06-monitoring": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    },
+    "final-assembly": {
+      "status": "not_started",
+      "score": null,
+      "attempts": 0,
+      "hint_level_reached": 0,
+      "completed_at": null
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "chapter_id": "ch02-routing",
+  "title": "多 Agent 路由与编排",
+  "description": "重写路由决策内核：三信号领域打分、澄清短路、性能评分、最优实例选择、主/辅 Agent 结构化决策。",
+  "language": "python",
+  "package": "routing",
+  "files": [
+    {
+      "path": "routing.py",
+      "description": "路由决策内核。只允许标准库"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "AGENTS: list[str]",
+        "doc": "常量：['general', 'technical', 'billing', 'escalation']"
+      },
+      {
+        "signature": "def domain_scores(intent: str | None, message: str, entities: dict[str, list[str]] | None = None) -> dict[str, float]",
+        "doc": "返回 {'general','technical','billing'} 三个领域的分数（不含 escalation，它由 route_decision 短路处理）。初始分 general=0.1, technical=0.0, billing=0.0。意图加分：query/order_status/logistics/request/complaint/greeting/feedback/other → general +0.55；technical/technical_login/technical_crash → technical +0.75；billing/account/account_security/refund/invoice/payment_issue → billing +0.75。关键词加分（message 转小写后子串匹配）：technical 词表 ['崩溃','报错','error','crash','无法登录','登录失败','500','401','验证码'] 每命中 +0.18 封顶 +0.45；billing 词表 ['退款','退货','扣款','发票','账单','支付','订阅','refund','invoice','多扣'] 每命中 +0.18 封顶 +0.45；general 词表 ['订单','物流','快递','配送','会员','积分','咨询','帮助'] 每命中 +0.12 封顶 +0.35。实体加分：entities 含非空 error_code → technical +0.2；非空 amount → billing +0.15；非空 order_id → general +0.1。所有分数 round 到 3 位小数"
+      },
+      {
+        "signature": "def needs_clarification(intent: str | None, confidence: float, message: str) -> bool",
+        "doc": "intent == 'other' 且 len(message.strip()) > 2 且 confidence < 0.5 时返回 True，否则 False"
+      },
+      {
+        "signature": "def routing_score(total: int, success: int, total_ms: float, penalty: float = 0.0) -> float",
+        "doc": "success_rate = success/total（total 为 0 时取 1.0）；avg_ms = total_ms/total（total 为 0 时取 0.0）；latency_score = 1/(1+avg_ms/1000)；base = success_rate*0.7 + latency_score*0.3；返回 base * max(0.0, 1-penalty)"
+      },
+      {
+        "signature": "def best_agent(agents: list[dict]) -> dict | None",
+        "doc": "agents 每项形如 {'name': str, 'total': int, 'success': int, 'total_ms': float, 'penalty': float}。返回 routing_score 最高的一项（并列取先出现者）；空列表返回 None"
+      },
+      {
+        "signature": "def route_decision(intent: str | None, urgency: str | None, confidence: float, scores: dict[str, float], available: set[str], collaboration_targets: list[str]) -> dict",
+        "doc": "返回 {'primary': str, 'supporting': list[str], 'reason': str, 'confidence': float}。决策顺序：(1) urgency 小写后等于 'critical' → primary='escalation', supporting=[], confidence=1.0；(2) intent 为 'escalation' 或 'human_handoff' → primary='escalation', supporting=[], confidence=max(confidence, 0.8)；(3) 否则过滤 scores：保留 general（永远可用）和 available 中存在的领域，得到 available_scores，若为空 → primary='general', confidence=0.1；(4) 按分数降序，primary=最高分者；(5) supporting = collaboration_targets 中 != primary 且在 available_scores 里的项；若为空则退回分数阈值兜底：ordered[1:] 中非 general、分数 >= 0.45 且 >= primary_score * 0.55 的领域；(6) confidence = round(min(primary_score, 1.0), 3)；reason 为非空字符串，需包含 primary 名称"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "本章与 Ch1 解耦：intent/urgency/entities 都以普通字符串/dict 传入，不需要 import ch01 的模块。挑战题（不计入测试）：实现 run_parallel 的确定性合并——多个 Agent 回复时，第一个为主，其余加 '补充说明：' 前缀拼接（对照 agent_orchestrator.py:604-:610）。"
+}

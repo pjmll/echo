@@ -1,0 +1,28 @@
+{
+  "chapter_id": "ch00-overview",
+  "title": "系统全景与环境搭建",
+  "description": "把 EchoMind /chat 主链路的六个阶段写成有序常量，并提供流水线渲染函数。这是后面所有章节的地图。",
+  "language": "python",
+  "package": "overview",
+  "files": [
+    {
+      "path": "overview.py",
+      "description": "请求链路定义：CHAT_FLOW 常量（list[str]，六个阶段名，按执行顺序）+ render_flow 函数"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "CHAT_FLOW: list[str] = [...]",
+        "doc": "模块级常量。六个阶段名按执行顺序排列：read_memory, intent_recognition, knowledge_check, agent_routing, execute_agents, write_memory"
+      },
+      {
+        "signature": "def render_flow(stages: list[str] | None = None) -> str",
+        "doc": "把阶段列表用 ' -> ' 连接成一行。stages 为 None 时渲染 CHAT_FLOW。空列表返回空字符串"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "本 Lab 不依赖任何第三方库，只需要 Python 3.10+。写完后先通读 lecture.md 的模块地图再动手，30 分钟内可完成。"
+}

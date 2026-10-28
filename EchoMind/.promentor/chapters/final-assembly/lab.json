@@ -1,0 +1,24 @@
+{
+  "chapter_id": "final-assembly",
+  "title": "组装 Mini EchoMind",
+  "description": "集成前 6 章组件，实现一个可运行的最小多 Agent 客服系统。",
+  "language": "python",
+  "package": "mini_echomind",
+  "files": [
+    {
+      "path": "mini_echomind.py",
+      "description": "Mini EchoMind 主实现。导入前 6 章模块，集成所有组件。"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "class MiniEchoMind:\n  def __init__(self)\n  async def handle_request(self, user_id: str, conv_id: str, message: str) -> str\n  def get_stats(self) -> dict",
+        "doc": "Mini EchoMind 主类。__init__ 初始化所有组件（熔断器、缓存、工作记忆、统计）。handle_request 处理一次完整请求：意图识别→路由→记忆→知识检索→上下文→LLM生成→监控采集。get_stats 返回系统统计信息。"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "本章需要导入前 6 章的模块（intent_tools, routing, mcp_tools, rag_tools, memory_tools, monitor_tools）。所有 LLM 调用用 mock 函数替代。挑战题：实现完整的 search_with_rewrite 链路、Redis 持久化模拟、Prometheus 指标导出。"
+}

@@ -1,0 +1,48 @@
+{
+  "chapter_id": "ch01-intent",
+  "title": "三路融合意图识别",
+  "description": "重写意图识别的确定性内核：本地哈希向量、余弦相似度、两级关键词模式匹配、加权投票、实体提取、紧急度判定。不含 LLM 调用。",
+  "language": "python",
+  "package": "intent",
+  "files": [
+    {
+      "path": "intent.py",
+      "description": "意图识别确定性内核。只允许标准库（hashlib/re/json/math）"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "CATEGORIES: list[str]",
+        "doc": "19 个意图类别字符串，与 IntentCategory 枚举值一致：query, complaint, request, greeting, escalation, technical, billing, account, feedback, order_status, logistics, refund, invoice, payment_issue, account_security, technical_login, technical_crash, human_handoff, other"
+      },
+      {
+        "signature": "def cosine(a: list[float], b: list[float]) -> float",
+        "doc": "纯 Python 余弦相似度。任一向量为零向量时返回 0.0"
+      },
+      {
+        "signature": "def local_embedding(text: str, dims: int = 256) -> list[float]",
+        "doc": "hashing trick 向量：text 转小写去空白后切 1/2/3-gram 字符片段（set 去重，空文本则用原文本自身），每个 token 取 MD5，前 4 字节 big-endian 整数 % dims 定位，第 5 字节偶数 +1.0 奇数 -1.0 累加。返回长度 dims 的 float 列表，同输入必须同输出"
+      },
+      {
+        "signature": "def pattern_recognize(message: str, specific_patterns: dict[str, list[str]], generic_patterns: dict[str, list[str]]) -> tuple[str, float]",
+        "doc": "message 先转小写。先在 specific_patterns 中找命中关键词最多的类别，命中则返回 (类别, 分数)；否则在 generic_patterns 中同样处理；都未命中返回 ('other', 0.0)。分数 = min(1.0, 0.5 + 0.25 * (命中数 - 1))。并列时取遍历顺序中先出现的"
+      },
+      {
+        "signature": "def vote(llm: dict, emb: dict, pat: dict, threshold: float = 0.5) -> tuple[str, float, dict[str, float]]",
+        "doc": "三路加权投票。每路输入形如 {'intent': str, 'confidence': float}，llm 可能带 'failed': True。source_scores = {'llm': llm置信度, 'embedding': emb置信度, 'pattern': pat置信度}（None 按 0.0）。llm failed 时：emb 非 other 且置信度>0 → 返回 emb 结果；否则 pat 非 other 且置信度>0 → 返回 pat 结果；否则 ('other', 0.0, source_scores)。正常时按权重 llm=0.7, emb=0.2, pat=0.1 对每个类别累加 w*confidence，取最高分 best/best_score；best_score < threshold 时返回 ('other', best_score, source_scores)，否则 (best, best_score, source_scores)"
+      },
+      {
+        "signature": "def extract_entities(message: str) -> dict[str, list[str]]",
+        "doc": "返回固定五个键：order_id, product, date, amount, error_code（product 恒为空列表）。正则规则：order_id = (?:订单号?|order(?:_id)?|#)\\s*[:：#]?\\s*([A-Za-z0-9_-]{4,32})（忽略大小写）；date = (今天|明天|昨天|本周|这周|下周|\\d{4}[-/.年]\\d{1,2}[-/.月]\\d{1,2}日?)；amount = ((?:¥|￥)\\s*\\d+(?:\\.\\d{1,2})?|\\d+(?:\\.\\d{1,2})?\\s*(?:元|块|rmb|cny|usd|美元))（忽略大小写）；error_code = 带前缀 (?:error(?:_code)?|错误码|状态码|http)\\s*[:：#]?\\s*([45]\\d{2})\\b 与裸 \\b([45]\\d{2})\\b 两次 findall 结果相加。所有列表保序去重、去空白"
+      },
+      {
+        "signature": "def urgency(message: str, intent: str) -> int",
+        "doc": "返回 1-4（LOW/MEDIUM/HIGH/CRITICAL）。message 转小写后按 CRITICAL→HIGH→MEDIUM 顺序查关键词表：CRITICAL=['紧急','emergency','urgent','asap','立刻']，HIGH=['今天','马上','尽快','hurry','now']，MEDIUM=['这周','soon','快点']，命中即返回对应级别。无关键词时：intent 为 escalation 或 human_handoff → 3；complaint → 2；其余 → 1"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "挑战题（不计入测试）：在 vote 中实现细粒度修正——当 best 属于宽泛大类 {query, billing, technical, account, escalation}、pat 意图属于细粒度集合 {order_status, logistics, refund, invoice, payment_issue, account_security, technical_login, technical_crash, human_handoff}、pat 置信度 >= 0.5 且 best_score < 0.8 时，返回 pat 意图，置信度取 max(best_score, pat_conf)，并在 source_scores 中加入 'refined_by_pattern'。对照 intent_recognizer.py:364-:368。"
+}

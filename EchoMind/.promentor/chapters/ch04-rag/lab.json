@@ -1,0 +1,36 @@
+{
+  "chapter_id": "ch04-rag",
+  "title": "RAG 检索优化",
+  "description": "提取 RAG 检索优化的确定性内核：句子边界文本分块、跨结果去重合并、LLM 重排索引应用、距离转相似度。",
+  "language": "python",
+  "package": "rag_tools",
+  "files": [
+    {
+      "path": "rag_tools.py",
+      "description": "检索优化确定性内核。只允许标准库（hashlib/time/math）"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "def chunk_text(text: str, chunk_size: int = 500) -> List[str]",
+        "doc": "将长文本按 chunk_size 切片，按句子边界分割以保证语义完整性。先以句号（。）切分为句子列表；如果 len(text) <= chunk_size 且 text.strip() 非空，返回 [text]；空文本返回 []。遍历句子贪心拼接：当前 chunk + 新句子长度超过 chunk_size 时，flush 当前 chunk（追加到结果），新句子成为下一个 chunk 的起点。拼接时用 '。' 连接（current + '。' + sent）。最后剩余的非空 current 也追加为最后一个 chunk。"
+      },
+      {
+        "signature": "def merge_dedupe(results: List[List[dict]], max_items: Optional[int] = None) -> List[dict]",
+        "doc": "合并多个检索结果并去重。对每个 item 用 hashlib.md5(str(item).encode()).hexdigest() 作为唯一 key。按 results 的嵌套顺序遍历（外层 for 每个 result_list，内层 for 每个 item），首次出现的 item 加入结果，重复 key 跳过。保持第一次出现的插入序。max_items > 0 时对结果截断取前 max_items 条。返回去重后的列表。"
+      },
+      {
+        "signature": "def apply_rerank(order: List[int], items: List[dict], top_k: int) -> List[dict]",
+        "doc": "根据 LLM 返回的索引列表重排结果。遍历 order 中的每个索引 i：仅当 0 <= i < len(items) 时才选取（过滤越界索引）。按合法索引顺序构建 reranked 列表。返回 reranked[:top_k] 截断到 top_k。如果 top_k == 0 或 items 为空返回 []。"
+      },
+      {
+        "signature": "def distance_to_score(dist: float) -> float",
+        "doc": "将 ChromaDB 的余弦距离转换为相似度分数。return round(1.0 - dist, 4)。dist 为正浮点数，结果保留四位小数以减少浮点噪音。"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "本章与 Ch1-Ch3 解耦：不需要 import 其他章节。挑战题（不计入测试）：实现 MCPToolManager.search_with_rewrite 的核心链路——给定子查询列表和工具名，并行调用、合并去重、LLM 重排、返回 Top-K。"
+}

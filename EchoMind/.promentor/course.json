@@ -1,0 +1,73 @@
+{
+  "course_id": "echomind-internals",
+  "title": "EchoMind 内部设计",
+  "description": "从意图识别到监控闭环，逐章重写 EchoMind 多 Agent 客服系统的核心组件。",
+  "language": "python",
+  "total_chapters": 8,
+  "chapters": [
+    {
+      "id": "ch00-overview",
+      "title": "系统全景与环境搭建",
+      "difficulty": "easy",
+      "description": "EchoMind 六阶段请求流水线、模块依赖图、两条反馈闭环。",
+      "prerequisites": [],
+      "source_files": ["api/main.py:67-188", "api/main.py:272-340", "api/main.py:343-402"]
+    },
+    {
+      "id": "ch01-intent",
+      "title": "三路融合意图识别",
+      "difficulty": "mid",
+      "description": "LLM 70% + Embedding 20% + Pattern 10% 加权投票，hashing trick 本地嵌入，正则实体提取。",
+      "prerequisites": ["ch00-overview"],
+      "source_files": ["core/intent_recognizer.py:29-48", "core/intent_recognizer.py:172-221", "core/intent_recognizer.py:338-371", "core/intent_recognizer.py:423-440"]
+    },
+    {
+      "id": "ch02-routing",
+      "title": "多 Agent 路由与编排",
+      "difficulty": "mid",
+      "description": "domain_scores 信号评分、route_decision 决策树、routing_score 性能加权、best_agent 选择。",
+      "prerequisites": ["ch01-intent"],
+      "source_files": ["agents/agent_orchestrator.py:868-927", "agents/agent_orchestrator.py:929-987", "agents/agent_orchestrator.py:1050-1081"]
+    },
+    {
+      "id": "ch03-mcp-tools",
+      "title": "MCP 工具框架",
+      "difficulty": "mid",
+      "description": "三态熔断器状态机、TTL 缓存 + FIFO 驱逐、JSON Schema 参数校验、ToolResult 容器。",
+      "prerequisites": ["ch02-routing"],
+      "source_files": ["mcp/tool_manager.py:71-106", "mcp/tool_manager.py:393-419", "mcp/tool_manager.py:425-442"]
+    },
+    {
+      "id": "ch04-rag",
+      "title": "RAG 检索优化",
+      "difficulty": "easy",
+      "description": "句子边界文本分块、跨结果去重合并、LLM 重排索引应用、距离转相似度。",
+      "prerequisites": ["ch03-mcp-tools"],
+      "source_files": ["mcp/knowledge_base.py:161-184", "mcp/tool_manager.py:337-344", "mcp/tool_manager.py:355-389"]
+    },
+    {
+      "id": "ch05-memory-context",
+      "title": "记忆与上下文构建",
+      "difficulty": "mid",
+      "description": "工作记忆 key 生成、上下文压缩分区、摘要合并、上下文格式化。",
+      "prerequisites": ["ch04-rag"],
+      "source_files": ["memory/conversation_memory.py:381-383", "memory/conversation_memory.py:256-303", "memory/conversation_memory.py:445-460"]
+    },
+    {
+      "id": "ch06-monitoring",
+      "title": "监控与路由降权闭环",
+      "difficulty": "mid",
+      "description": "Z-score 异常检测、路由降权系数计算、阈值告警检查、Monitor→Orchestrator 反馈闭环。",
+      "prerequisites": ["ch05-memory-context"],
+      "source_files": ["monitor/performance_monitor.py:61-100", "monitor/performance_monitor.py:244-251", "monitor/performance_monitor.py:253-270"]
+    },
+    {
+      "id": "final-assembly",
+      "title": "组装 Mini EchoMind",
+      "difficulty": "hard",
+      "description": "集成前 6 章组件，实现可运行的最小多 Agent 客服系统。",
+      "prerequisites": ["ch01-intent", "ch02-routing", "ch03-mcp-tools", "ch04-rag", "ch05-memory-context", "ch06-monitoring"],
+      "source_files": ["api/main.py", "agents/agent_orchestrator.py", "mcp/tool_manager.py", "memory/conversation_memory.py", "monitor/performance_monitor.py"]
+    }
+  ]
+}

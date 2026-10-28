@@ -1,0 +1,32 @@
+{
+  "chapter_id": "ch06-monitoring",
+  "title": "监控与路由降权闭环",
+  "description": "提取监控系统的确定性内核：Z-score 异常检测、路由降权系数计算、阈值告警检查。",
+  "language": "python",
+  "package": "monitor_tools",
+  "files": [
+    {
+      "path": "monitor_tools.py",
+      "description": "监控确定性内核。只允许标准库（statistics/math）"
+    }
+  ],
+  "interface": {
+    "types": [],
+    "functions": [
+      {
+        "signature": "def z_score(values: List[float], current: float) -> Optional[float]",
+        "doc": "计算当前值相对于历史值的 Z-score。values 是历史数据点列表（至少 2 个），current 是当前值。计算 mean = statistics.mean(values)，stdev = statistics.stdev(values)。如果 stdev == 0 或 len(values) < 2，返回 None（无法计算）。否则返回 round(abs(current - mean) / stdev, 2)。结果保留两位小数。"
+      },
+      {
+        "signature": "def routing_penalty(success_rate: float, avg_ms: float) -> float",
+        "doc": "根据成功率和平均延迟计算路由降权系数。penalty = 0.0；如果 success_rate < 0.90，penalty += min(0.5, (0.90 - success_rate) * 2)；如果 avg_ms > 3000，penalty += min(0.4, (avg_ms - 3000) / 10000)。返回 min(penalty, 0.9)。结果范围 [0.0, 0.9]。"
+      },
+      {
+        "signature": "def check_threshold(metric: str, value: float, thresholds: Dict[str, Tuple[float, str, str]]) -> Optional[Dict[str, Any]]",
+        "doc": "检查指标是否超过阈值。thresholds 格式：{metric_name: (threshold_value, severity, operator)}，operator 为 'less_than' 或 'greater_than'。如果 metric 不在 thresholds 中，返回 None。根据 operator 判断：'less_than' 时 value < threshold 触发；'greater_than' 时 value > threshold 触发。触发时返回 {'metric': metric, 'value': value, 'threshold': threshold, 'severity': severity, 'triggered': True}；未触发返回 None。"
+      }
+    ]
+  },
+  "test_command": "cd {chapter_dir} && python -m pytest lab_test.py -q -p no:cacheprovider",
+  "notes": "本章与 Ch1-Ch5 解耦：不需要 import 其他章节。挑战题（不计入测试）：实现完整的 AnomalyDetector 类——维护滑动窗口、记录数据点、检测异常、返回异常信息。"
+}
